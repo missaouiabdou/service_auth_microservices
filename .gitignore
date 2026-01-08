@@ -19,7 +19,7 @@
 ###< symfony/phpunit-bridge ###
 
 ###> lexik/jwt-authentication-bundle ###
-/var/jwt/private.pem
+/config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
 
 # IDE
@@ -33,11 +33,8 @@
 .DS_Store
 Thumbs.db
 
+# Docker
+docker-compose.override.yml
+
 # Logs
 *.log
-
-# Composer
-composer.phar
-
-# Docker
-.docker/
