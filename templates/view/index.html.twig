@@ -1,0 +1,125 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Auth Service - Welcome{% endblock %}
+
+{% block body %}
+<div style="font-family: sans-serif; max-width: 600px; margin: 50px auto; text-align: center; color: #333;">
+    <h1>Auth Service</h1>
+    <p>Bienvenue sur le microservice d'authentification.</p>
+    <hr>
+
+    <!-- Onglets -->
+
+
+    <!-- Formulaire de Login -->
+    <div id="login-view">
+        <h2>Connexion</h2>
+        <form id="loginForm" style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+            <label>Email:</label>
+            <input type="email" id="login-email" required style="padding: 8px; width: 100%; box-sizing: border-box;">
+
+            <label>Password:</label>
+            <input type="password" id="login-password" required style="padding: 8px; width: 100%; box-sizing: border-box;">
+
+            <button type="submit" style="padding: 10px; background: #28a745; color: white; border: none; cursor: pointer;">Se connecter</button>
+        </form>
+        <p id="login-msg" style="margin-top: 10px; font-weight: bold;"></p>
+    </div>
+
+    <!-- Formulaire d'Inscription (Caché par défaut) -->
+    <div id="register-view" style="display: none;">
+        <h2>Inscription</h2>
+        <form id="registerForm" style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+            <label>Nom complet:</label>
+            <input type="text" id="reg-name" required style="padding: 8px; width: 100%; box-sizing: border-box;">
+
+            <label>Email:</label>
+            <input type="email" id="reg-email" required style="padding: 8px; width: 100%; box-sizing: border-box;">
+
+            <label>Password:</label>
+            <input type="password" id="reg-password" required style="padding: 8px; width: 100%; box-sizing: border-box;">
+
+            <button type="submit" style="padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">S'inscrire</button>
+        </form>
+        <p id="reg-msg" style="margin-top: 10px; font-weight: bold;"></p>
+    </div>
+
+    <hr style="margin-top: 30px;">
+    <a href="/api/health/ready" style="color: #007bff; text-decoration: none;">Vérifier la santé de l'API</a>
+</div>
+
+<script>
+    // 1. Gestion des onglets
+    function showTab(tab) {
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const btnLogin = document.getElementById('btn-login');
+        const btnRegister = document.getElementById('btn-register');
+
+        if (tab === 'login') {
+            loginView.style.display = 'block';
+            registerView.style.display = 'none';
+            btnLogin.style.background = '#007bff';
+            btnLogin.style.color = 'white';
+            btnRegister.style.background = '#eee';
+            btnRegister.style.color = '#333';
+        } else {
+            loginView.style.display = 'none';
+            registerView.style.display = 'block';
+            btnRegister.style.background = '#007bff';
+            btnRegister.style.color = 'white';
+            btnLogin.style.background = '#eee';
+            btnLogin.style.color = '#333';
+        }
+    }
+
+    // 2. Fonction pour envoyer les données
+    async function sendData(url, data, msgId) {
+        const msgEl = document.getElementById(msgId);
+        msgEl.style.color = '#333';
+        msgEl.innerText = 'Chargement...';
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                msgEl.style.color = 'green';
+                msgEl.innerText = 'Succès !';
+                console.log('Token reçu :', result.token);
+                localStorage.setItem('token', result.token);
+            } else {
+                throw new Error(result.error || 'Erreur inconnue');
+            }
+        } catch (error) {
+            msgEl.style.color = 'red';
+            msgEl.innerText = 'Erreur : ' + error.message;
+        }
+    }
+
+    // 3. Écouteurs d'événements
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value
+        };
+        sendData('/api/login', data, 'login-msg');
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = {
+            email: document.getElementById('reg-email').value,
+            password: document.getElementById('reg-password').value,
+            name: document.getElementById('reg-name').value
+        };
+        sendData('/api/register', data, 'reg-msg');
+    });
+</script>
+{% endblock %}

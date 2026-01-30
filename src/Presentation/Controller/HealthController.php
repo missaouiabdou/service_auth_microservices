@@ -56,6 +56,14 @@ final class HealthController extends AbstractController
             'timestamp' => (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM),
         ], Response::HTTP_OK);
     }
+    #[Route('/view', name: 'app_view')]
+
+    public function index(): Response
+    {
+        return $this->render('view/index.html.twig', [
+            'controller_name' => 'ViewController',
+        ]);
+    }
 
     private function checkDatabase(): string
     {
