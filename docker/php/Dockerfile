@@ -30,10 +30,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www
 
 # Copy composer files
-COPY composer.json composer.lock symfony.lock ./
+COPY composer.json composer.lock ./
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+# Install dependencies (will be done in development stage)
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction || true
 
 # Stage 2: Development
 FROM builder AS development
