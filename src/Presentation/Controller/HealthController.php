@@ -8,8 +8,9 @@ use Doctrine\DBAL\Connection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
+// CHANGEMENT ICI : Ajout du préfixe /api
 #[Route('/api/health', name: 'health_')]
 final class HealthController extends AbstractController
 {
@@ -18,6 +19,7 @@ final class HealthController extends AbstractController
     ) {
     }
 
+    // La route complète sera maintenant : /api/health
     #[Route('', name: 'check', methods: ['GET'])]
     public function health(): JsonResponse
     {
@@ -27,6 +29,7 @@ final class HealthController extends AbstractController
         ], Response::HTTP_OK);
     }
 
+    // La route complète sera maintenant : /api/health/ready
     #[Route('/ready', name: 'ready', methods: ['GET'])]
     public function ready(): JsonResponse
     {
@@ -44,6 +47,7 @@ final class HealthController extends AbstractController
         ], $allHealthy ? Response::HTTP_OK : Response::HTTP_SERVICE_UNAVAILABLE);
     }
 
+    // La route complète sera maintenant : /api/health/live
     #[Route('/live', name: 'live', methods: ['GET'])]
     public function live(): JsonResponse
     {

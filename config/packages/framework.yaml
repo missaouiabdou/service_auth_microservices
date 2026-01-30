@@ -1,4 +1,6 @@
 framework:
+    validation:
+        enable_attributes: true
     secret: '%env(APP_SECRET)%'
     http_method_override: false
     handle_all_throwables: true

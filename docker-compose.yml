@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   php:
@@ -13,12 +13,14 @@ services:
       - ./:/var/www
       - ./var/jwt:/var/www/var/jwt
     environment:
-      - APP_ENV=${APP_ENV:-prod}
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-auth_user}:${POSTGRES_PASSWORD:-auth_pass}@postgres:5432/${POSTGRES_DB:-auth_db}?serverVersion=16&charset=utf8
+      - APP_ENV=${APP_ENV:-dev}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-auth_user}:${POSTGRES_PASSWORD:-auth_pass}@database:5432/${POSTGRES_DB:-auth_db}?serverVersion=16&charset=utf8
       - MESSENGER_TRANSPORT_DSN=amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672/%2f/messages
       - REDIS_URL=redis://redis:6379
+      - XDEBUG_MODE=off
+
     depends_on:
-      - postgres
+      - database
       - rabbitmq
       - redis
     networks:
@@ -39,7 +41,7 @@ services:
     networks:
       - auth-network
 
-  postgres:
+  database:
     image: postgres:16-alpine
     container_name: auth-service-postgres
     restart: unless-stopped

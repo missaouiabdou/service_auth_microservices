@@ -46,7 +46,7 @@ dev: ## 🚀 Start development environment (complete setup)
 	@echo "$(GREEN)✓ Services ready$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Step 6/9:$(NC) Installing Composer dependencies..."
-	docker-compose exec -T php composer install
+	docker-compose exec -T -e XDEBUG_MODE=off php composer install --no-scripts
 	@echo "$(GREEN)✓ Dependencies installed$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Step 7/9:$(NC) Creating database..."
@@ -54,6 +54,7 @@ dev: ## 🚀 Start development environment (complete setup)
 	@echo "$(GREEN)✓ Database created$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Step 8/9:$(NC) Running migrations..."
+	docker-compose exec -T php bin/console cache:clear
 	docker-compose exec -T php php bin/console doctrine:migrations:migrate --no-interaction
 	@echo "$(GREEN)✓ Migrations executed$(NC)"
 	@echo ""

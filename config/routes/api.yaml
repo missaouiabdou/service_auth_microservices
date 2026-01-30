@@ -3,4 +3,3 @@ api_controllers:
         path: ../../src/Presentation/Controller/
         namespace: App\Presentation\Controller
     type: attribute
-    prefix: /api
