@@ -1,0 +1,56 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Authentication Microservice API
+            description: |
+                Production-ready Authentication Microservice with JWT authentication.
+                
+                ## Features
+                - User registration and authentication
+                - JWT token management (access + refresh tokens)
+                - Rate limiting protection
+                - Password change functionality
+                - Health check endpoints
+                
+                ## Authentication
+                Most endpoints require a valid JWT access token in the Authorization header:
+                ```
+                Authorization: Bearer <your_access_token>
+                ```
+            version: 1.0.0
+            contact:
+                name: API Support
+                email: support@example.com
+        servers:
+            - url: http://localhost:8080
+              description: Local development server
+            - url: https://api.example.com
+              description: Production server
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+                    description: 'Enter your JWT token in the format: Bearer {token}'
+        security:
+            - Bearer: []
+        tags:
+            - name: Authentication
+              description: User authentication and registration endpoints
+            - name: Token Management
+              description: JWT token operations
+            - name: Health
+              description: Service health check endpoints
+
+    areas:
+        path_patterns:
+            - ^/api(?!/doc$)
+        host_patterns: []
+
+    models:
+        names:
+            - { alias: User, type: App\Domain\Entity\User }
+            - { alias: RegisterUserDTO, type: App\Application\DTO\RegisterUserDTO }
+            - { alias: AuthenticationDTO, type: App\Application\DTO\AuthenticationDTO }
+            - { alias: TokenDTO, type: App\Application\DTO\TokenDTO }

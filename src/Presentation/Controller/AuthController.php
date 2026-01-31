@@ -11,6 +11,7 @@ use App\Application\Service\RateLimiter;
 use App\Application\Service\RegistrationService;
 use App\Application\Service\TokenService;
 use App\Presentation\Exception\Custom\RateLimitException;
+use OpenApi\Attributes as OA;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,6 +21,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api', name: 'api_')]
+#[OA\Tag(name: 'Authentication')]
 final class AuthController extends AbstractController
 {
     public function __construct(
@@ -33,6 +35,71 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/register', name: 'register', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/register',
+        summary: 'Register a new user',
+        description: 'Creates a new user account and returns user information with authentication tokens',
+        tags: ['Authentication']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['email', 'password', 'name'],
+            properties: [
+                new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com', description: 'User email address'),
+                new OA\Property(property: 'password', type: 'string', format: 'password', example: 'SecurePass123!', description: 'Password (min 8 chars, must contain uppercase, lowercase, number, and special character)'),
+                new OA\Property(property: 'name', type: 'string', example: 'John Doe', description: 'User full name')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 201,
+        description: 'User successfully registered',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(
+                    property: 'user',
+                    properties: [
+                        new OA\Property(property: 'id', type: 'string', format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000'),
+                        new OA\Property(property: 'email', type: 'string', example: 'user@example.com'),
+                        new OA\Property(property: 'name', type: 'string', example: 'John Doe'),
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string'), example: ['ROLE_USER'])
+                    ],
+                    type: 'object'
+                ),
+                new OA\Property(
+                    property: 'token',
+                    properties: [
+                        new OA\Property(property: 'accessToken', type: 'string', example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'),
+                        new OA\Property(property: 'refreshToken', type: 'string', example: 'def50200a1b2c3d4e5f6...'),
+                        new OA\Property(property: 'expiresIn', type: 'integer', example: 900, description: 'Token expiration time in seconds'),
+                        new OA\Property(property: 'tokenType', type: 'string', example: 'Bearer')
+                    ],
+                    type: 'object'
+                )
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 400,
+        description: 'Validation error',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'errors', type: 'string', example: 'Email is already registered')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 429,
+        description: 'Too many registration attempts',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'error', type: 'string', example: 'Rate limit exceeded'),
+                new OA\Property(property: 'message', type: 'string', example: 'Too many registration attempts. Please try again later.'),
+                new OA\Property(property: 'retryAfter', type: 'integer', example: 900, description: 'Seconds to wait before retry')
+            ]
+        )
+    )]
     public function register(Request $request): JsonResponse
     {
         $clientIp = $request->getClientIp() ?? 'unknown';
@@ -73,6 +140,54 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/login', name: 'login', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/login',
+        summary: 'Authenticate user',
+        description: 'Authenticates a user with email and password, returns JWT tokens',
+        tags: ['Authentication']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['email', 'password'],
+            properties: [
+                new OA\Property(property: 'email', type: 'string', format: 'email', example: 'user@example.com'),
+                new OA\Property(property: 'password', type: 'string', format: 'password', example: 'SecurePass123!')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Successfully authenticated',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'accessToken', type: 'string', example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'),
+                new OA\Property(property: 'refreshToken', type: 'string', example: 'def50200a1b2c3d4e5f6...'),
+                new OA\Property(property: 'expiresIn', type: 'integer', example: 900),
+                new OA\Property(property: 'tokenType', type: 'string', example: 'Bearer')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 401,
+        description: 'Invalid credentials',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'error', type: 'string', example: 'Authentication failed'),
+                new OA\Property(property: 'message', type: 'string', example: 'Invalid credentials')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 429,
+        description: 'Too many login attempts',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'error', type: 'string', example: 'Rate limit exceeded'),
+                new OA\Property(property: 'retryAfter', type: 'integer', example: 900)
+            ]
+        )
+    )]
     public function login(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -106,6 +221,46 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/token/refresh', name: 'token_refresh', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/token/refresh',
+        summary: 'Refresh access token',
+        description: 'Generates a new access token using a valid refresh token',
+        tags: ['Token Management']
+    )]
+    #[OA\RequestBody(
+        required: true,
+        content: new OA\JsonContent(
+            required: ['refreshToken'],
+            properties: [
+                new OA\Property(property: 'refreshToken', type: 'string', example: 'def50200a1b2c3d4e5f6...', description: 'Valid refresh token')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Token successfully refreshed',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'accessToken', type: 'string', example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...'),
+                new OA\Property(property: 'refreshToken', type: 'string', example: 'ghi78900xyz...'),
+                new OA\Property(property: 'expiresIn', type: 'integer', example: 900),
+                new OA\Property(property: 'tokenType', type: 'string', example: 'Bearer')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 401,
+        description: 'Invalid or expired refresh token',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'error', type: 'string', example: 'Invalid or expired refresh token')
+            ]
+        )
+    )]
+    #[OA\Response(
+        response: 429,
+        description: 'Too many refresh attempts'
+    )]
     public function refresh(Request $request): JsonResponse
     {
         $clientIp = $request->getClientIp() ?? 'unknown';
@@ -134,6 +289,22 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/logout', name: 'logout', methods: ['POST'])]
+    #[OA\Post(
+        path: '/api/logout',
+        summary: 'Logout user',
+        description: 'Logs out the current user. In stateless JWT architecture, this is handled client-side by removing the token.',
+        security: [['Bearer' => []]],
+        tags: ['Authentication']
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Successfully logged out',
+        content: new OA\JsonContent(
+            properties: [
+                new OA\Property(property: 'message', type: 'string', example: 'Logged out successfully')
+            ]
+        )
+    )]
     public function logout(): JsonResponse
     {
         // In stateless JWT, logout is handled client-side by removing the token
