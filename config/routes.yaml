@@ -14,5 +14,16 @@ controllers:
     type: attribute
 
 # Import API documentation routes
-nelmio_api_doc:
-    resource: routes/nelmio_api_doc.yaml
+app.swagger_ui:
+    path: /api/docs
+    controller: nelmio_api_doc.controller.swagger_ui
+
+app.swagger:
+    path: /api/doc.json
+    controller: nelmio_api_doc.controller.swagger
+
+app.swagger_yaml:
+    path: /api/doc.yaml
+    controller: nelmio_api_doc.controller.swagger
+    defaults:
+        format: yaml
